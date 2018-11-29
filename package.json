@@ -23,7 +23,9 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "babel-preset-env": "^1.7.0",
     "graphql": "^14.0.2",
+    "lodash": "^4.17.11",
     "ra-data-graphql-simple": "^2.4.3",
     "ra-data-json-server": "^2.4.2",
     "ra-data-simple-rest": "^2.4.3",
