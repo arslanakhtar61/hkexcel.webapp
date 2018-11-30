@@ -4,8 +4,9 @@ import './App.css';
 import dataProviderFactory from './dataProvider';
 import themeReducer from './themeReducer';
 import Layout from './Layout';
+import authProvider from './authProvider';
 
-import { SchoolList, SchoolCreate, SchoolEdit, SchoolIcon } from './schools';
+import { SchoolList, SchoolCreate, SchoolEdit, SchoolIcon} from './schools';
 
 class App extends Component {
   state = { dataProvider: null };
@@ -44,7 +45,7 @@ class App extends Component {
         customReducers={{ theme: themeReducer }}
         //customSagas={sagas}
         //customRoutes={customRoutes}
-        //authProvider={authProvider}
+        authProvider={authProvider}
         //dashboard={Dashboard}
         //loginPage={Login}
         appLayout={Layout}

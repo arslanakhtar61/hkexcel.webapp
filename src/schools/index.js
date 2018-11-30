@@ -28,7 +28,9 @@ import {
     regex,
     SelectInput,
     ReferenceInput,
-    choices
+    choices,
+    ImageInput,
+    ImageField,
 } from 'react-admin';
 import withStyles from '@material-ui/core/styles/withStyles';
 import Icon from '@material-ui/icons/Bookmark';
@@ -36,6 +38,7 @@ import Icon from '@material-ui/icons/Bookmark';
 import ThumbnailField from '../students/ThumbnailField';
 import StudentRefField from '../students/StudentRefField';
 import LinkToRelatedStudents from './LinkToRelatedStudents';
+import FullNameField from './FullNameField';
 import _ from 'lodash';
 
 export const SchoolIcon = Icon;
@@ -80,23 +83,17 @@ export const SchoolList = withStyles(listStyles)(({ classes, ...props }) => (
 
 const SchoolFilter = props => (
     <Filter {...props}>
-        <SearchInput source="fullName" alwaysOn />
-        <DateInput source="last_seen_gte" />
-        <NullableBooleanInput source="has_ordered" />
-        <NullableBooleanInput source="has_newsletter" defaultValue />
+        <SearchInput label="Search by Name" source="fullName" alwaysOn />
+        <TextInput label="Country" source="address.country" />
+        <TextInput label="ID" source="id" />
     </Filter>
 );
 
-const SchoolTitle = translate(({ record, translate }) => (
-    <span>
-        {translate('School Edit', { smart_count: 1 })} &quot;{
-            record.name
-        }&quot;
-    </span>
-));
+const SchoolTitle = ({ record }) =>
+    record ? <FullNameField record={record} size={32} /> : null;
 
 const schoolCodeValidation = (value, allValues) => {
-    getSchoolCodesAsync()
+    getSchoolIdsAsync()
     .then(schoolCodes => result(_.includes(schoolCodes, value)))
 
     const result = (schoolCodeExist) => {
@@ -105,16 +102,9 @@ const schoolCodeValidation = (value, allValues) => {
         }
         return undefined;
     }
-
-    /*let a = ['DBS', 'KGS'];
-    let schoolCodeExist = _.includes(a, value);
-        if(schoolCodeExist){
-            return 'already exist!';
-        }
-        return undefined;*/
 }
 
-const getSchoolCodesAsync = async () => {
+const getSchoolIdsAsync = async () => {
     const response = await fetch(process.env.REACT_APP_API_URL+'/schools', {
         method: 'GET',
         headers: {
@@ -122,15 +112,44 @@ const getSchoolCodesAsync = async () => {
         },
     });   
     const json = await response.json();
-
     return json.map((d, i) => {
-        return d.schoolCode
+        return d.id
     });
 }
 
 const validateSchoolCode = [required('Unique School Code must be provided') , schoolCodeValidation];
 const validateName = [required('School name must be provided')];
 const validateZipCode = regex(/^\d(5)$/, 'Must be a valid Zip Code');
+
+export class ControlledTextInput extends React.Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            ids: [],
+        }; 
+    }
+    componentDidMount(){
+        getSchoolIdsAsync()
+        .then(ids => this.setState({ids}));
+    } 
+    schoolCodeValidation = (value, allValues) => {
+        if(_.includes(this.state.ids, value)){
+            return 'already exist!';
+        }
+        return undefined;
+    }
+    validateSchoolCode = [required('Unique School ID must be provided') , this.schoolCodeValidation];
+    render(){ 
+        return(
+            <TextInput
+                    source="id"
+                    label="School ID"
+                    validate={this.validateSchoolCode}  
+                    formClassName={this.props.formClassName}               
+            />
+        );
+    }
+}
 
 export const SchoolCreate = withStyles(editStyles)(({ classes, ...props }) => (
     <Create {...props}>
@@ -142,12 +161,13 @@ export const SchoolCreate = withStyles(editStyles)(({ classes, ...props }) => (
                     validate={validateName}
                     formClassName={classes.fullName}
                 />
-                <TextInput
+                {/*<TextInput
                     source="id"
                     label="School ID"
                     validate={validateSchoolCode}
                     formClassName={classes.schoolCode}                  
-                />
+                />*/}
+                <ControlledTextInput formClassName={classes.schoolCode}/>
             </FormTab>
             <FormTab label="ADDRESS" path="address">
                 <LongTextInput
@@ -158,6 +178,16 @@ export const SchoolCreate = withStyles(editStyles)(({ classes, ...props }) => (
                 <TextInput label="Zip Code" source="address.zipCode" /*validate={validateZipCode}*/ formClassName={classes.zipcode}/>
                 <SelectInput label="Country" allowEmpty source="address.country" formClassName={classes.country} choices={counteries} optionText="countryName" optionValue="countryValue"/>
                 <TextInput label="City" allowEmpty source="address.city" formClassName={classes.city} />
+            </FormTab>
+            <FormTab label="UPLOAD" path="upload">
+                <ImageInput
+                    source="upload"
+                    label="Avatar"
+                    accept="image/*"
+                    placeholder={<p>Drop your avatar here</p>}
+                >
+                    <ImageField source="avatar" title="School Avatar"/>
+                </ImageInput>
             </FormTab>
         </TabbedForm>
     </Create>
@@ -171,7 +201,7 @@ const counteries = [
         {cityValue:'Beijing', cityName:'Beijing'},
         {cityValue:'Shanghai', cityName:'Shanghai'},
     ]},
-    {countryValue:'Pakistan', countryName:'Pakistn', cities:[
+    {countryValue:'Pakistan', countryName:'Pakistan', cities:[
         {cityValue:'Islamabad', cityName:'Islamabad'},
         {cityValue:'Karachi', cityName:'Karachi'},
         {cityValue:'Lahore', cityName:'Lahore'},
@@ -200,12 +230,21 @@ export const SchoolEdit = withStyles(editStyles)(({ classes, ...props }) => (
                 <LongTextInput
                     source="address.streetHouse"
                     label="House/Street No."
-                    formClassName={classes.address}
                 />
                 <TextInput label="Zip Code" source="address.zipCode" /*validate={validateZipCode}*/ formClassName={classes.zipcode}/>
                 <SelectInput label="Country" allowEmpty source="address.country" formClassName={classes.country} choices={counteries} optionText="countryName" optionValue="countryValue"/>
                 <TextInput label="City" allowEmpty source="address.city" formClassName={classes.city} />
             </FormTab> 
+            <FormTab label="UPLOAD" path="upload">
+                <ImageInput
+                    source="upload"
+                    label="Avatar"
+                    accept="image/*"
+                    placeholder={<p>Drop your avatar here</p>}
+                >
+                    <ImageField source="avatar" title="School Avatar"/>
+                </ImageInput>
+            </FormTab>
         </TabbedForm>
     </Edit>
 ));
