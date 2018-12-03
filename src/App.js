@@ -12,6 +12,7 @@ class App extends Component {
   state = { dataProvider: null };
 
   async componentWillMount() {
+    document.title = "HKExcel Admin"
     /*this.restoreFetch = await fakeServerFactory(
         process.env.REACT_APP_DATA_PROVIDER
     );*/
